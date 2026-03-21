@@ -1,4 +1,4 @@
-import connectDB from "@/lib/mongodb";
+import { connectDB } from "@/lib/mongodb";
 import Booking from "@/models/Booking";
 
 export const runtime = "nodejs";
