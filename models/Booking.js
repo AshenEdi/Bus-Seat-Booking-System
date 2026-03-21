@@ -1,26 +1,50 @@
 import mongoose from "mongoose";
 
-const BookingSchema = new mongoose.Schema({
-  bookingId: {
-    type: Number,
-    required: true,
+const BookingSchema = new mongoose.Schema(
+  {
+    route: {
+      type: String,
+      default: "",
+    },
+    date: {
+      type: String,
+      default: "",
+    },
+    time: {
+      type: String,
+      default: "",
+    },
+    name: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    phone: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    seats: {
+      type: [Number],
+      default: [],
+    },
   },
-  passengerName: {
-    type: String,
-    required: true,
-  },
-  phone: {
-    type: String,
-    required: true,
-  },
-  seatNumber: {
-    type: Number,
-    required: true,
-  },
-  route: {
-    type: String,
-    required: true,
-  },
-});
+  {
+    timestamps: true,
+  }
+);
+
+const existingBookingModel = mongoose.models.Booking;
+
+if (
+  existingBookingModel &&
+  (
+    existingBookingModel.schema.path("bookingId") ||
+    existingBookingModel.schema.path("passengerName") ||
+    existingBookingModel.schema.path("seatNumber")
+  )
+) {
+  delete mongoose.models.Booking;
+}
 
 export default mongoose.models.Booking || mongoose.model("Booking", BookingSchema);

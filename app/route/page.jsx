@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 
 export default function RoutePage() {
   const router = useRouter();
-
   const [route, setRoute] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
@@ -16,36 +15,36 @@ export default function RoutePage() {
       return;
     }
 
-    router.push(`/booking?route=${route}&date=${date}&time=${time}`);
+    const params = new URLSearchParams({ route, date, time });
+    router.push(`/booking?${params.toString()}`);
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-5 bg-white text-white">
-
+    <div className="min-h-screen flex flex-col items-center justify-center gap-5 bg-white text-gray-900">
       <h1 className="text-3xl font-bold">Select Your Trip</h1>
 
-      {/* ROUTE */}
       <select
-        className="p-2 rounded text-black w-64"
-        onChange={(e) => setRoute(e.target.value)}
+        className="p-2 rounded border w-64"
+        value={route}
+        onChange={(event) => setRoute(event.target.value)}
       >
         <option value="">Select Route</option>
-        <option value="Colombo-Kandy">Colombo → Kandy</option>
-        <option value="Colombo-Galle">Colombo → Galle</option>
-        <option value="Kandy-Jaffna">Kandy → Jaffna</option>
+        <option value="Colombo-Kandy">Colombo to Kandy</option>
+        <option value="Colombo-Galle">Colombo to Galle</option>
+        <option value="Kandy-Jaffna">Kandy to Jaffna</option>
       </select>
 
-      {/* DATE */}
       <input
         type="date"
-        className="p-2 rounded text-black w-64"
-        onChange={(e) => setDate(e.target.value)}
+        className="p-2 rounded border w-64"
+        value={date}
+        onChange={(event) => setDate(event.target.value)}
       />
 
-      {/* TIME */}
       <select
-        className="p-2 rounded text-black w-64"
-        onChange={(e) => setTime(e.target.value)}
+        className="p-2 rounded border w-64"
+        value={time}
+        onChange={(event) => setTime(event.target.value)}
       >
         <option value="">Select Time</option>
         <option value="08:00 AM">08:00 AM</option>
@@ -55,11 +54,10 @@ export default function RoutePage() {
 
       <button
         onClick={handleNext}
-        className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded"
+        className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
       >
         Continue to Seat Selection
       </button>
-
     </div>
   );
 }
