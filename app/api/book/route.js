@@ -1,5 +1,6 @@
 import { connectDB } from "@/lib/mongodb";
 import Booking from "@/models/Booking";
+import Schedule from "@/models/Schedule";
 
 export const runtime = "nodejs";
 
@@ -71,6 +72,23 @@ export async function POST(req) {
       bookingData.time &&
       bookingData.seats.length > 0
     ) {
+      const schedule = await Schedule.findOne({
+        route: bookingData.route,
+        date: bookingData.date,
+        time: bookingData.time,
+      }).lean();
+
+      const disabledSeats = Array.isArray(schedule?.disabledSeats)
+        ? schedule.disabledSeats
+        : [];
+
+      if (bookingData.seats.some((seat) => disabledSeats.includes(seat))) {
+        return Response.json(
+          { success: false, error: "One or more selected seats are disabled." },
+          { status: 409 }
+        );
+      }
+
       const existing = await Booking.findOne({
         route: bookingData.route,
         date: bookingData.date,

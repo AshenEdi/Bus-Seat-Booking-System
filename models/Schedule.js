@@ -4,6 +4,11 @@ const ScheduleSchema = new mongoose.Schema({
   route: String,
   date: String,
   time: String,
+
+  disabledSeats: {
+  type: [Number],
+  default: [],
+},
 });
 
 export default mongoose.models.Schedule ||

@@ -6,22 +6,43 @@ export default function BookingsPage() {
   const [bookings, setBookings] = useState([]);
   const [search, setSearch] = useState("");
 
-  // 🔹 Fetch all bookings
   const fetchBookings = async () => {
     try {
       const res = await fetch("/api/book");
       const data = await res.json();
-      setBookings(data);
+      setBookings(data.bookings || []);
     } catch (err) {
       console.error("Error fetching bookings:", err);
+      setBookings([]);
     }
   };
 
   useEffect(() => {
-    fetchBookings();
+    let cancelled = false;
+
+    async function loadBookings() {
+      try {
+        const res = await fetch("/api/book");
+        const data = await res.json();
+
+        if (!cancelled) {
+          setBookings(data.bookings || []);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error("Error fetching bookings:", err);
+          setBookings([]);
+        }
+      }
+    }
+
+    loadBookings();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  // 🔹 Cancel booking
   const handleDelete = async (id) => {
     if (!confirm("Cancel this booking?")) return;
 
@@ -31,28 +52,28 @@ export default function BookingsPage() {
       });
 
       if (res.ok) {
-        alert("Booking cancelled ✅");
+        alert("Booking cancelled");
         fetchBookings();
-      } else {
-        alert("Failed ❌");
+        return;
       }
+
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : null;
+      alert(data?.message || data?.error || "Failed to cancel booking");
     } catch (err) {
       console.error(err);
+      alert("Error cancelling booking");
     }
   };
 
-  // 🔹 Filter bookings
-  const filteredBookings = bookings.filter((b) =>
-    `${b.name} ${b.route}`
-      .toLowerCase()
-      .includes(search.toLowerCase())
+  const filteredBookings = bookings.filter((booking) =>
+    `${booking.name} ${booking.route}`.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
     <div className="p-6 text-white">
       <h1 className="text-2xl font-bold mb-4">All Bookings</h1>
 
-      {/* 🔹 Search */}
       <input
         type="text"
         placeholder="Search by name or route..."
@@ -61,7 +82,6 @@ export default function BookingsPage() {
         className="mb-4 p-2 w-full md:w-1/3 rounded bg-gray-800 border border-gray-700"
       />
 
-      {/* 🔹 Table */}
       <div className="bg-gray-900 p-4 rounded-lg">
         <table className="w-full border border-gray-700">
           <thead className="bg-gray-800">
@@ -72,7 +92,7 @@ export default function BookingsPage() {
               <th className="p-2 border">Route</th>
               <th className="p-2 border">Date</th>
               <th className="p-2 border">Time</th>
-              <th className="p-2 border">Seat</th>
+              <th className="p-2 border">Seats</th>
               <th className="p-2 border">Actions</th>
             </tr>
           </thead>
@@ -85,19 +105,22 @@ export default function BookingsPage() {
                 </td>
               </tr>
             ) : (
-              filteredBookings.map((b) => (
-                <tr key={b._id} className="border-t border-gray-700">
-                  <td className="p-2">{b.bookingId}</td>
-                  <td className="p-2">{b.name}</td>
-                  <td className="p-2">{b.phone}</td>
-                  <td className="p-2">{b.route}</td>
-                  <td className="p-2">{b.date}</td>
-                  <td className="p-2">{b.time}</td>
-                  <td className="p-2">{b.seatNumber}</td>
-
+              filteredBookings.map((booking) => (
+                <tr key={booking._id} className="border-t border-gray-700">
+                  <td className="p-2">{booking.bookingId || booking._id}</td>
+                  <td className="p-2">{booking.name}</td>
+                  <td className="p-2">{booking.phone}</td>
+                  <td className="p-2">{booking.route}</td>
+                  <td className="p-2">{booking.date}</td>
+                  <td className="p-2">{booking.time}</td>
+                  <td className="p-2">
+                    {Array.isArray(booking.seats)
+                      ? booking.seats.join(", ")
+                      : booking.seatNumber || "-"}
+                  </td>
                   <td className="p-2">
                     <button
-                      onClick={() => handleDelete(b._id)}
+                      onClick={() => handleDelete(booking._id)}
                       className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded"
                     >
                       Cancel

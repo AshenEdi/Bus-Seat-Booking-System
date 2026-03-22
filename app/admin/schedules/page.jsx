@@ -1,20 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import SeatLayout from "@/components/SeatLayout";
 
 export default function SchedulePage() {
   const [route, setRoute] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
-
   const [schedules, setSchedules] = useState([]);
-
-  // 🔥 Modal states
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [bookings, setBookings] = useState([]);
+  const [disabledSeats, setDisabledSeats] = useState([]);
 
-  // 🔹 Fetch schedules
   const fetchSchedules = async () => {
     try {
       const res = await fetch("/api/schedule");
@@ -26,10 +23,30 @@ export default function SchedulePage() {
   };
 
   useEffect(() => {
-    fetchSchedules();
+    let cancelled = false;
+
+    async function loadSchedules() {
+      try {
+        const res = await fetch("/api/schedule");
+        const data = await res.json();
+
+        if (!cancelled) {
+          setSchedules(data);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error("Error fetching schedules:", err);
+        }
+      }
+    }
+
+    loadSchedules();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  // 🔹 Add schedule
   const handleAddSchedule = async () => {
     if (!route || !date || !time) {
       alert("Please fill all fields");
@@ -46,20 +63,19 @@ export default function SchedulePage() {
       });
 
       if (res.ok) {
-        alert("Schedule added ✅");
+        alert("Schedule added");
         setRoute("");
         setDate("");
         setTime("");
         fetchSchedules();
       } else {
-        alert("Failed ❌");
+        alert("Failed");
       }
     } catch (err) {
       console.error(err);
     }
   };
 
-  // 🔹 Delete schedule
   const handleDelete = async (id) => {
     if (!confirm("Delete this schedule?")) return;
 
@@ -69,49 +85,57 @@ export default function SchedulePage() {
       });
 
       if (res.ok) {
-        alert("Deleted 🗑️");
+        alert("Deleted");
         fetchSchedules();
+      } else {
+        const text = await res.text();
+        const data = text ? JSON.parse(text) : null;
+        alert(data?.error || "Failed to delete schedule");
       }
     } catch (err) {
       console.error(err);
+      alert("Error deleting schedule");
     }
   };
 
-  // 🔹 Fetch bookings for modal
-  const fetchBookings = async (schedule) => {
-    try {
-      const res = await fetch(
-        `/api/book?scheduleId=${schedule._id}`
-      );
-      const data = await res.json();
-      setBookings(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // 🔹 Open modal
-  const openManageSeats = (sch) => {
-    setSelectedSchedule(sch);
+  const openManageSeats = (schedule) => {
+    setSelectedSchedule(schedule);
     setShowModal(true);
-    fetchBookings(sch);
+    setDisabledSeats(schedule.disabledSeats || []);
   };
 
-  // 🔹 Cancel booking
-  const handleCancelBooking = async (id) => {
-    if (!confirm("Cancel this booking?")) return;
+  const handleSaveDisabledSeats = async () => {
+    if (!selectedSchedule?._id) {
+      alert("No schedule selected");
+      return;
+    }
 
     try {
-      const res = await fetch(`/api/book/${id}`, {
-        method: "DELETE",
+      const res = await fetch("/api/schedule/disableSeats", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          scheduleId: selectedSchedule._id,
+          disabledSeats,
+        }),
       });
 
-      if (res.ok) {
-        alert("Booking cancelled ✅");
-        fetchBookings(selectedSchedule);
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : null;
+
+      if (res.ok && data?.success) {
+        alert("Seats saved");
+        setShowModal(false);
+        fetchSchedules();
+        return;
       }
+
+      alert(data?.error || "Failed to save seats");
     } catch (err) {
       console.error(err);
+      alert("Error saving seats");
     }
   };
 
@@ -119,7 +143,6 @@ export default function SchedulePage() {
     <div className="p-6 text-white">
       <h1 className="text-2xl font-bold mb-4">Manage Schedules</h1>
 
-      {/* 🔹 Add Schedule */}
       <div className="bg-gray-900 p-4 rounded-lg mb-6">
         <h2 className="text-lg font-semibold mb-3">Add Schedule</h2>
 
@@ -140,10 +163,10 @@ export default function SchedulePage() {
           />
 
           <input
-          type="time"
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
-          className="p-2 rounded bg-gray-800 border border-gray-700"
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            className="p-2 rounded bg-gray-800 border border-gray-700"
           />
         </div>
 
@@ -155,7 +178,6 @@ export default function SchedulePage() {
         </button>
       </div>
 
-      {/* 🔹 Schedule Table */}
       <div className="bg-gray-900 p-4 rounded-lg">
         <h2 className="text-lg font-semibold mb-3">All Schedules</h2>
 
@@ -177,22 +199,21 @@ export default function SchedulePage() {
                 </td>
               </tr>
             ) : (
-              schedules.map((sch) => (
-                <tr key={sch._id} className="border-t border-gray-700">
-                  <td className="p-2">{sch.route}</td>
-                  <td className="p-2">{sch.date}</td>
-                  <td className="p-2">{sch.time}</td>
-
+              schedules.map((schedule) => (
+                <tr key={schedule._id} className="border-t border-gray-700">
+                  <td className="p-2">{schedule.route}</td>
+                  <td className="p-2">{schedule.date}</td>
+                  <td className="p-2">{schedule.time}</td>
                   <td className="p-2 space-x-2">
                     <button
-                      onClick={() => openManageSeats(sch)}
+                      onClick={() => openManageSeats(schedule)}
                       className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded"
                     >
                       Manage Seats
                     </button>
 
                     <button
-                      onClick={() => handleDelete(sch._id)}
+                      onClick={() => handleDelete(schedule._id)}
                       className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded"
                     >
                       Delete
@@ -205,52 +226,33 @@ export default function SchedulePage() {
         </table>
       </div>
 
-      {/* 🔥 MODAL */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
           <div className="bg-gray-900 p-6 rounded-lg w-[500px]">
-            <h2 className="text-xl font-bold mb-4">
-              Manage Seats
-            </h2>
+            <h2 className="text-xl font-bold mb-4">Manage Seats</h2>
 
             <p className="mb-4 text-sm text-gray-400">
               {selectedSchedule?.route} | {selectedSchedule?.date} |{" "}
               {selectedSchedule?.time}
             </p>
 
-            {/* Seats */}
-            <div className="grid grid-cols-4 gap-3 mb-6">
-              {[...Array(20)].map((_, index) => {
-                const seatNumber = index + 1;
-
-                const booking = bookings.find(
-                  (b) => b.seatNumber === seatNumber
-                );
-
-                return (
-                  <div
-                    key={seatNumber}
-                    className={`p-2 text-center rounded cursor-pointer ${
-                      booking ? "bg-red-600" : "bg-green-600"
-                    }`}
-                    onClick={() => {
-                      if (booking) {
-                        handleCancelBooking(booking._id);
-                      }
-                    }}
-                  >
-                    {seatNumber}
-                  </div>
-                );
-              })}
+            <div className="mb-6">
+              <SeatLayout
+                route={selectedSchedule?.route}
+                date={selectedSchedule?.date}
+                time={selectedSchedule?.time}
+                mode="admin"
+                disabledSeats={disabledSeats}
+                setDisabledSeats={setDisabledSeats}
+              />
             </div>
 
-            <div className="flex justify-between text-sm mb-4">
-              <span className="text-green-400">Available</span>
-              <span className="text-red-400">
-                Booked (Click to cancel)
-              </span>
-            </div>
+            <button
+              onClick={handleSaveDisabledSeats}
+              className="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded mb-3"
+            >
+              Save Changes
+            </button>
 
             <button
               onClick={() => setShowModal(false)}
