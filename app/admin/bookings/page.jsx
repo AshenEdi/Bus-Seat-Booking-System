@@ -71,29 +71,47 @@ export default function BookingsPage() {
   );
 
   return (
-    <div className="p-6 text-white">
-      <h1 className="text-2xl font-bold mb-4">All Bookings</h1>
+  <div
+    className="min-h-screen p-6 text-white"
+    style={{
+      backgroundImage: `
+        linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)),
+        url('/images/bus-wall.jpg')
+      `,
+      backgroundSize: "cover",
+      backgroundPosition: "center",
+    }}
+  >
+    <h1 className="text-3xl font-bold mb-8 text-center">
+      All Bookings
+    </h1>
 
+    {/* 🔹 Search */}
+    <div className="max-w-5xl mx-auto mb-6">
       <input
         type="text"
         placeholder="Search by name or route..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="mb-4 p-2 w-full md:w-1/3 rounded bg-gray-800 border border-gray-700"
+        className="p-2 w-full md:w-1/3 rounded bg-white/20 border border-gray-300 text-white"
       />
+    </div>
 
-      <div className="bg-gray-900 p-4 rounded-lg">
-        <table className="w-full border border-gray-700">
-          <thead className="bg-gray-800">
+    {/* 🔹 Table */}
+    <div className="bg-white/10 backdrop-blur-lg p-6 rounded-2xl max-w-5xl mx-auto shadow-lg">
+      
+      <div className="overflow-x-auto">
+        <table className="w-full border border-gray-500">
+          <thead className="bg-white/20">
             <tr>
-              <th className="p-2 border">Booking ID</th>
-              <th className="p-2 border">Name</th>
-              <th className="p-2 border">Phone</th>
-              <th className="p-2 border">Route</th>
-              <th className="p-2 border">Date</th>
-              <th className="p-2 border">Time</th>
-              <th className="p-2 border">Seats</th>
-              <th className="p-2 border">Actions</th>
+              <th className="p-3 border">Booking ID</th>
+              <th className="p-3 border">Name</th>
+              <th className="p-3 border">Phone</th>
+              <th className="p-3 border">Route</th>
+              <th className="p-3 border">Date</th>
+              <th className="p-3 border">Time</th>
+              <th className="p-3 border">Seats</th>
+              <th className="p-3 border">Actions</th>
             </tr>
           </thead>
 
@@ -106,22 +124,29 @@ export default function BookingsPage() {
               </tr>
             ) : (
               filteredBookings.map((booking) => (
-                <tr key={booking._id} className="border-t border-gray-700">
-                  <td className="p-2">{booking.bookingId || booking._id}</td>
-                  <td className="p-2">{booking.name}</td>
-                  <td className="p-2">{booking.phone}</td>
-                  <td className="p-2">{booking.route}</td>
-                  <td className="p-2">{booking.date}</td>
-                  <td className="p-2">{booking.time}</td>
-                  <td className="p-2">
+                <tr
+                  key={booking._id}
+                  className="border-t border-gray-600 hover:bg-white/10 transition"
+                >
+                  <td className="p-3">
+                    {booking.bookingId || booking._id}
+                  </td>
+                  <td className="p-3">{booking.name}</td>
+                  <td className="p-3">{booking.phone}</td>
+                  <td className="p-3">{booking.route}</td>
+                  <td className="p-3">{booking.date}</td>
+                  <td className="p-3">{booking.time}</td>
+
+                  <td className="p-3">
                     {Array.isArray(booking.seats)
                       ? booking.seats.join(", ")
                       : booking.seatNumber || "-"}
                   </td>
-                  <td className="p-2">
+
+                  <td className="p-3">
                     <button
                       onClick={() => handleDelete(booking._id)}
-                      className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded"
+                      className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded transition"
                     >
                       Cancel
                     </button>
@@ -132,6 +157,8 @@ export default function BookingsPage() {
           </tbody>
         </table>
       </div>
+
     </div>
-  );
+  </div>
+);
 }

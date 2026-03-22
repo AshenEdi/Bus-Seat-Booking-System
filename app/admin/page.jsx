@@ -12,53 +12,65 @@ export default function AdminDashboard() {
 
   const fetchData = async () => {
     try {
-      // 🔹 Get bookings
       const bookingsRes = await fetch("/api/book");
       const bookingsData = await bookingsRes.json();
-      setTotalBookings(bookingsData.length);
+      setTotalBookings(bookingsData.bookings?.length || bookingsData.length || 0);
 
-      // 🔹 Get schedules
       const scheduleRes = await fetch("/api/schedule");
       const scheduleData = await scheduleRes.json();
-      setTotalSchedules(scheduleData.length);
+      setTotalSchedules(scheduleData.length || 0);
     } catch (err) {
       console.error("Error loading dashboard:", err);
     }
   };
 
   return (
-    <div className="min-h-screen bg-black text-white p-6">
-      <h1 className="text-3xl font-bold mb-8">
+    <div
+      className="min-h-screen p-6 text-white"
+      style={{
+        backgroundImage: `
+          linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)),
+          url('/images/bus-wall.jpg')
+        `,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      {/* Header */}
+      <h1 className="text-3xl font-bold mb-10 text-center">
         Admin Dashboard
       </h1>
 
-      {/* 🔥 Stats Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-        <div className="bg-gray-900 p-6 rounded-xl shadow">
-          <h2 className="text-gray-400 text-lg">
-            Total Bookings
-          </h2>
-          <p className="text-4xl font-bold mt-2">
-            {totalBookings}
-          </p>
-        </div>
-
-        <div className="bg-gray-900 p-6 rounded-xl shadow">
-          <h2 className="text-gray-400 text-lg">
+      {/* 🔥 Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12 max-w-4xl mx-auto">
+        
+        <div className="bg-white/10 backdrop-blur-lg p-6 rounded-2xl shadow-lg text-center">
+          <h2 className="text-gray-300 text-lg">
             Total Schedules
           </h2>
-          <p className="text-4xl font-bold mt-2">
+          <p className="text-5xl font-bold mt-2 text-green-400">
             {totalSchedules}
           </p>
         </div>
+
+        <div className="bg-white/10 backdrop-blur-lg p-6 rounded-2xl shadow-lg text-center">
+          <h2 className="text-gray-300 text-lg">
+            Total Bookings
+          </h2>
+          <p className="text-5xl font-bold mt-2 text-blue-400">
+           {totalBookings} 
+          </p>
+        </div>
+
       </div>
 
       {/* 🔹 Navigation Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+
         {/* Schedules */}
         <a
           href="/admin/schedules"
-          className="bg-purple-600 hover:bg-purple-700 p-6 rounded-xl transition"
+          className="bg-purple-600/80 backdrop-blur p-6 rounded-2xl hover:bg-purple-700 transition shadow-lg"
         >
           <h2 className="text-xl font-semibold mb-2">
             Manage Schedules
@@ -71,7 +83,7 @@ export default function AdminDashboard() {
         {/* Bookings */}
         <a
           href="/admin/bookings"
-          className="bg-blue-600 hover:bg-blue-700 p-6 rounded-xl transition"
+          className="bg-blue-600/80 backdrop-blur p-6 rounded-2xl hover:bg-blue-700 transition shadow-lg"
         >
           <h2 className="text-xl font-semibold mb-2">
             View Bookings
@@ -80,6 +92,7 @@ export default function AdminDashboard() {
             See all bookings and cancel seats
           </p>
         </a>
+
       </div>
     </div>
   );

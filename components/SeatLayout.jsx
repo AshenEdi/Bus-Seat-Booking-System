@@ -164,12 +164,12 @@ export default function SeatLayout({
 
   return (
     <div className="flex flex-col items-center gap-6">
-      <h2 className="text-2xl font-bold">
+      <h2 className="text-2xl font-bold text-white">
         {mode === "admin" ? "Manage Seats" : "Select Your Seats"}
       </h2>
 
       {mode !== "admin" && (
-        <div className="text-center">
+        <div className="text-center text-white">
           <p>
             <b>Route:</b> {route}
           </p>
@@ -240,11 +240,11 @@ export default function SeatLayout({
 
       {mode !== "admin" && selectedSeats.length > 0 && (
         <>
-          <p className="text-lg">
+          <p className="text-lg text-white">
             Selected Seats: <b>{selectedSeats.join(", ")}</b>
           </p>
 
-          <div className="flex flex-col gap-3 mt-4 w-64">
+          <div className="flex flex-col gap-3 mt-4 w-64 text-white">
             <input
               type="text"
               placeholder="Enter Name"
@@ -258,7 +258,14 @@ export default function SeatLayout({
               placeholder="Enter Phone"
               className="p-2 rounded border"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+
+                // 🔥 allow only numbers
+                if (/^\d*$/.test(value)) {
+                  setPhone(value);
+                }
+              }}
             />
 
             <button
