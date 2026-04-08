@@ -18,6 +18,7 @@ export default function SeatLayout({
   const [userDisabledSeats, setUserDisabledSeats] = useState([]);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [phoneError, setPhoneError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const rows = 5;
   const activeDisabledSeats = mode === "admin" ? disabledSeats : userDisabledSeats;
@@ -80,6 +81,42 @@ export default function SeatLayout({
     };
   }, [route, date, time, mode]);
 
+  const validatePhoneNumber = (phoneValue) => {
+    const cleanedPhone = phoneValue.trim();
+    
+    // Check if empty
+    if (!cleanedPhone) {
+      return "Phone number is required";
+    }
+    
+    // Check if only digits
+    if (!/^\d+$/.test(cleanedPhone)) {
+      return "Phone number must contain only digits";
+    }
+    
+    // Check exact length (10 digits)
+    if (cleanedPhone.length !== 10) {
+      return "Phone number must be exactly 10 digits";
+    }
+    
+    return ""; // No error
+  };
+
+  const handlePhoneChange = (value) => {
+    // Allow only numbers
+    if (/^\d*$/.test(value)) {
+      setPhone(value);
+      
+      // Validate while typing
+      if (value.length > 0) {
+        const error = validatePhoneNumber(value);
+        setPhoneError(error);
+      } else {
+        setPhoneError("");
+      }
+    }
+  };
+
   const handleSelect = (seatNumber) => {
     if (mode === "admin") {
       if (activeDisabledSeats.includes(seatNumber)) {
@@ -116,8 +153,16 @@ export default function SeatLayout({
       return;
     }
 
-    if (!cleanName || !cleanPhone || selectedSeats.length === 0) {
+    if (!cleanName || selectedSeats.length === 0) {
       alert("Please complete all details");
+      return;
+    }
+
+    // Validate phone number before submission
+    const phoneValidationError = validatePhoneNumber(cleanPhone);
+    if (phoneValidationError) {
+      alert(phoneValidationError);
+      setPhoneError(phoneValidationError);
       return;
     }
 
@@ -151,8 +196,8 @@ export default function SeatLayout({
       setName("");
       setPhone("");
 
-      if (data.booking?._id) {
-        router.push(`/confirmation?bookingId=${encodeURIComponent(data.booking._id)}`);
+      if (data.booking?.bookingId) {
+        router.push(`/confirmation?bookingId=${encodeURIComponent(data.booking.bookingId)}`);
       }
     } catch (error) {
       console.error(error);
@@ -256,17 +301,21 @@ export default function SeatLayout({
             <input
               type="text"
               placeholder="Enter Phone"
-              className="p-2 rounded border"
+              className={`p-2 rounded border text-white ${
+                phoneError ? "border-red-500" : "border-gray-300"
+              }`}
               value={phone}
-              onChange={(e) => {
-                const value = e.target.value;
-
-                // 🔥 allow only numbers
-                if (/^\d*$/.test(value)) {
-                  setPhone(value);
-                }
-              }}
+              onChange={(e) => handlePhoneChange(e.target.value)}
+              maxLength="10"
             />
+            
+            {phoneError && (
+              <p className="text-red-400 text-sm">{phoneError}</p>
+            )}
+            
+            {phone && !phoneError && (
+              <p className="text-green-400 text-sm">✓ Phone number is valid</p>
+            )}
 
             <button
               onClick={handleBooking}

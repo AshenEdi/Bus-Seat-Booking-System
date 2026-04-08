@@ -4,6 +4,20 @@ import Schedule from "@/models/Schedule";
 
 export const runtime = "nodejs";
 
+async function generateBookingId() {
+  const lastBooking = await Booking.findOne().sort({ createdAt: -1 }).lean();
+  
+  let nextNumber = 1;
+  if (lastBooking?.bookingId) {
+    const match = lastBooking.bookingId.match(/[A-Z](\d+)/);
+    if (match) {
+      nextNumber = parseInt(match[1]) + 1;
+    }
+  }
+  
+  return `A${String(nextNumber).padStart(2, "0")}`;
+}
+
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const route = searchParams.get("route")?.trim();
@@ -104,7 +118,10 @@ export async function POST(req) {
       }
     }
 
-    const booking = await Booking.create(bookingData);
+    const booking = await Booking.create({
+      ...bookingData,
+      bookingId: await generateBookingId(),
+    });
     return Response.json({ success: true, booking }, { status: 201 });
   } catch (error) {
     return Response.json(

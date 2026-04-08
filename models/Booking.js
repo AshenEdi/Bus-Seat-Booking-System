@@ -2,6 +2,11 @@ import mongoose from "mongoose";
 
 const BookingSchema = new mongoose.Schema(
   {
+    bookingId: {
+      type: String,
+      unique: true,
+      default: "",
+    },
     route: {
       type: String,
       default: "",
